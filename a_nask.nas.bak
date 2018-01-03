@@ -25,11 +25,10 @@
 		GLOBAL	_api_openprowin
 		GLOBAL	_api_openconwin
 		GLOBAL	_api_openstawin
-		GLOBAL	_api_produce0
-		GLOBAL	_api_consume0
 		GLOBAL	_api_produce
 		GLOBAL	_api_consume
 		GLOBAL	_api_pacsta
+		GLOBAL  _api_ncst
 
 [SECTION .text]
 
@@ -108,10 +107,10 @@ _api_boxfilwin:	; void api_boxfilwin(int win, int x0, int y0, int x1, int y1, in
 _api_initmalloc:	; void api_initmalloc(void);
 		PUSH	EBX
 		MOV		EDX,8
-		MOV		EBX,[CS:0x0020]		; mallocÔøΩÃàÔøΩÃî‘ín
+		MOV		EBX,[CS:0x0020]		; mallocóÃàÊÇÃî‘ín
 		MOV		EAX,EBX
-		ADD		EAX,32*1024			; 32KBÔøΩë´ÇÔøΩ
-		MOV		ECX,[CS:0x0000]		; ÔøΩfÔøΩ[ÔøΩ^ÔøΩZÔøΩOÔøΩÔøΩÔøΩÔøΩÔøΩgÔøΩÃëÂÇ´ÔøΩÔøΩ
+		ADD		EAX,32*1024			; 32KBÇë´Ç∑
+		MOV		ECX,[CS:0x0000]		; ÉfÅ[É^ÉZÉOÉÅÉìÉgÇÃëÂÇ´Ç≥
 		SUB		ECX,EAX
 		INT		0x40
 		POP		EBX
@@ -285,28 +284,6 @@ _api_openstawin:	; int api_openstawin(char *buf, int xsiz, int ysiz, int col_inv
 		POP		EDI
 		RET
 		
-_api_produce0:       ; void api_produce0(int sht_win_pro, int pro_time);
-		PUSH	ESI
-		PUSH	EBX
-		MOV		EDX,68
-		MOV		EBX,[ESP+ 12] 		; sht_win_pro
-		MOV		ESI,[ESP+ 16] 		; pro_time
-		INT		0x40
-		POP		EBX
-		POP		ESI
-		RET
-
-_api_consume0:       ; void api_consume0(int sht_win_con);
-		PUSH	ESI
-		PUSH	EBX
-		MOV		EDX,69
-		MOV		EBX,[ESP+ 12] 		; sht_win_con
-		MOV		ESI,[ESP+ 16] 		; con_time
-		INT		0x40
-		POP		EBX
-		POP		ESI
-		RET
-
 _api_produce:       ; void api_produce(int sht_win_pro, int pro_time);
 		PUSH	ESI
 		PUSH	EBX
@@ -333,6 +310,14 @@ _api_pacsta:       ; void api_pacsta(int sht_win_sta);
 		PUSH	EBX
 		MOV		EDX,67
 		MOV		EBX,[ESP+ 8] 		; sht_win_sta
+		INT		0x40
+		POP		EBX
+		RET
+		
+_api_ncst:			; void api_ncst(char *cmdline);
+		PUSH	EBX
+		MOV		EDX,68
+		MOV		EBX,[ESP+8]	    ; cmdline
 		INT		0x40
 		POP		EBX
 		RET

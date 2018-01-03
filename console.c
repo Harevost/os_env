@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-void console_task(struct SHEET *sheet, int memtotal)
+void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
 	struct TASK *task = task_now();
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
@@ -183,7 +183,7 @@ void cons_putstr1(struct CONSOLE *cons, char *s, int l)
 	return;
 }
 
-void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, int memtotal)
+void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal)
 {
 	if (strcmp(cmdline, "mem") == 0 && cons->sht != 0) {
 		cmd_mem(cons, memtotal);
@@ -208,7 +208,7 @@ void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, int memtotal)
 	return;
 }
 
-void cmd_mem(struct CONSOLE *cons, int memtotal)
+void cmd_mem(struct CONSOLE *cons, unsigned int memtotal)
 {
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	char s[60];
@@ -298,7 +298,7 @@ void cmd_exit(struct CONSOLE *cons, int *fat)
 	}
 }
 
-void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal)
+void cmd_start(struct CONSOLE *cons, char *cmdline, unsigned int memtotal)
 {
 	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
 	struct SHEET *sht = open_console(shtctl, memtotal);
@@ -315,7 +315,7 @@ void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal)
 	return;
 }
 
-void cmd_ncst(struct CONSOLE *cons, char *cmdline, int memtotal)
+void cmd_ncst(struct CONSOLE *cons, char *cmdline, unsigned int memtotal)
 {
 	struct TASK *task = open_constask(0, memtotal);
 	struct FIFO32 *fifo = &task->fifo;
@@ -365,6 +365,12 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
 		/* �t�@�C�������������ꍇ */
 		p = (char *) memman_alloc_4k(memman, finfo->size);
 		file_loadfile(finfo->clustno, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
+		/*char mysize[30];
+		char my_p[30];
+		sprintf(mysize, "size=%d", finfo->size);
+		cons_putstr0(cons, mysize);
+		sprintf(my_p, "p=%x", *p);
+		cons_putstr0(cons, my_p);*/
 		if (finfo->size >= 36 && strncmp(p + 4, "Hari", 4) == 0 && *p == 0x00) {
 			segsiz = *((int *) (p + 0x0000));
 			esp    = *((int *) (p + 0x000c));
@@ -406,8 +412,9 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	struct CONSOLE *cons = task->cons;
 	struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
 	struct proAndCon *pac = (struct proAndCon *) * ((int *) 0x0fdc);//������
+	unsigned int memtotal = * ((unsigned int *) 0x0fec);
 	struct SHEET *sht;
-	struct SHEET *sht_win_pro0, *sht_win_con0, *sht_win_pro, *sht_win_con, *sht_win_sta;
+	struct SHEET *sht_win_pro, *sht_win_con, *sht_win_sta;
 	int *reg = &eax + 1;	/* eax�̎��̔Ԓn */
 		/* �ۑ��̂��߂�PUSHAD����ɏ��������� */
 		/* reg[0] : EDI,   reg[1] : ESI,   reg[2] : EBP,   reg[3] : ESP */
@@ -521,27 +528,21 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 			i = io_in8(0x61);
 			io_out8(0x61, (i | 0x03) & 0x0f);
 		}
-	} else if (edx == 55) { //produce_before
-		sht_win_pro0 = (struct SHEET *)ebx;
-		task_prodsr0_main(sht_win_pro0);
-	} else if (edx == 56) { //consume_before
-		sht_win_con0 = (struct SHEET *)ebx;
-		task_consmr0_main(sht_win_con0);
-	} else if (edx == 62) {	//produce_win
+	} else if (edx == 62) {//��?���x��
 		sht = sheet_alloc(shtctl);
 		sheet_setbuf(sht, (char *) ebx + ds_base, esi, edi, eax);
 		make_window8((char *) ebx + ds_base, esi, edi, (char *) ecx + ds_base, 0);
 		sheet_slide(sht, 200, 150);
 		sheet_updown(sht, 3);	/* 3��?�x???task_a?? */
 		reg[7] = (int) sht;
-	} else if (edx == 63) { //consume_win 
+	} else if (edx == 63) {//��?���x��
 		sht = sheet_alloc(shtctl);
 		sheet_setbuf(sht, (char *) ebx + ds_base, esi, edi, eax);
 		make_window8((char *) ebx + ds_base, esi, edi, (char *) ecx + ds_base, 0);
 		sheet_slide(sht, 540, 150);
 		sheet_updown(sht, 3);	/* 3��?�x???task_a?? */
 		reg[7] = (int) sht;
-	} else if (edx == 64) { //pacsta_win
+	} else if (edx == 64) {//?����?�x��
 		sht = sheet_alloc(shtctl);
 		sheet_setbuf(sht, (char *) ebx + ds_base, esi, edi, eax);
 		make_window8((char *) ebx + ds_base, esi, edi, (char *) ecx + ds_base, 0);
@@ -550,13 +551,19 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		reg[7] = (int) sht;
 	} else if (edx == 65) {//��?��
 	    sht_win_pro = (struct SHEET *)ebx;
-		task_prodsr_main(sht_win_pro, pac);
+		task_prodsr_main(sht_win_pro, pac, esi);
 	} else if (edx == 66) {//��?��
 		sht_win_con = (struct SHEET *)ebx;
-		task_consmr_main(sht_win_con, pac);
+		task_consmr_main(sht_win_con, pac, esi);
 	} else if (edx == 67) {//?����?
 		sht_win_sta = (struct SHEET *)ebx;
-		task_pacSta_main(sht_win_sta, pac);
+		task_pacSta_main((struct SHEET *)ebx, pac);
+	} else if (edx == 68) {//?����?
+		sht_win_pro = (struct SHEET *)ebx;
+		task_prodsr_main0((struct SHEET *)ebx, pac, esi);
+	} else if (edx == 69) {//?����?
+		sht_win_con = (struct SHEET *)ebx;
+		task_consmr_main0((struct SHEET *)ebx, pac, esi);
 	}
 	return 0;
 }

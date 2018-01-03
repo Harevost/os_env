@@ -93,6 +93,9 @@ void HariMain(void)
 	struct proAndCon *pac;  //共享全局变量
     pac = proAndCon_init(memman);
     *((int *) 0x0fdc) = (int) pac;
+    
+    /*memtotal*/
+    *((unsigned int*)0x0fec) = memtotal;
 
 	sheet_slide(sht_back,  0,  0);
 	sheet_slide(key_win,   32, 4);

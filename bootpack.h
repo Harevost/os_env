@@ -246,22 +246,21 @@ void change_wtitle8(struct SHEET *sht, char act);
 struct CONSOLE {
 	struct SHEET *sht;
 	int cur_x, cur_y, cur_c;
-	int x0, y0, xsize, ysize;
 	struct TIMER *timer;
 };
-void console_task(struct SHEET *sheet, int memtotal);
+void console_task(struct SHEET *sheet, unsigned int memtotal);
 void cons_putchar(struct CONSOLE *cons, int chr, char move);
 void cons_newline(struct CONSOLE *cons);
 void cons_putstr0(struct CONSOLE *cons, char *s);
 void cons_putstr1(struct CONSOLE *cons, char *s, int l);
-void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, int memtotal);
-void cmd_mem(struct CONSOLE *cons, int memtotal);
+void cons_runcmd(char *cmdline, struct CONSOLE *cons, int *fat, unsigned int memtotal);
+void cmd_mem(struct CONSOLE *cons, unsigned int memtotal);
 void cmd_cls(struct CONSOLE *cons);
 void cmd_dir(struct CONSOLE *cons);
 void cmd_type(struct CONSOLE *cons, int *fat, char *cmdline);
 void cmd_exit(struct CONSOLE *cons, int *fat);
-void cmd_start(struct CONSOLE *cons, char *cmdline, int memtotal);
-void cmd_ncst(struct CONSOLE *cons, char *cmdline, int memtotal);
+void cmd_start(struct CONSOLE *cons, char *cmdline, unsigned int memtotal);
+void cmd_ncst(struct CONSOLE *cons, char *cmdline, unsigned int memtotal);
 int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline);
 int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
 int *inthandler0d(int *esp);
@@ -293,11 +292,11 @@ void wait(struct TASK *task, struct semaphore *S);
 void signal(struct TASK *task, struct semaphore *S);
 
 /*Producer and Cosumer*/
-#define BUF_SIZE 35
+#define BUF_SIZE 10
 #define NEWITEM 120
 #define NULL 121
-#define PRO_TIMER 100
-#define CON_TIMER 50
+#define PRO_TIMER 200
+#define CON_TIMER 250
 struct proAndCon {
 	int in,out,size;
 	int buf[BUF_SIZE];
@@ -309,10 +308,8 @@ struct TASKSHT {
 	struct SHEET *sht;
 	int cur_x, cur_y, cur_c;
 };
-void task_prodsr0_main(struct SHEET *sht_win_b);
-void task_consmr0_main(struct SHEET *sht_win_b);
-void task_prodsr_main(struct SHEET *sht_win_b, struct proAndCon *pac);
-void task_consmr_main(struct SHEET *sht_win_b, struct proAndCon *pac);
+void task_prodsr_main(struct SHEET *sht_win_b, struct proAndCon *pac, int protime);
+void task_consmr_main(struct SHEET *sht_win_b, struct proAndCon *pac, int contime);
 void task_pacSta_main(struct SHEET *sht_win_b, struct proAndCon *pac);
 
 /*shtPutstr.c*/
